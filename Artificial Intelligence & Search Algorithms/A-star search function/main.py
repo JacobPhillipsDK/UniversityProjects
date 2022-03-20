@@ -1,15 +1,28 @@
-# This is a sample Python script.
+from WindowDraw import DrawWindow
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# --- Global constants ---
+
+# Dictionary for Colours!
+colour_dict = {
+    "RED": (255, 0, 0),
+    "BLACK": (0, 0, 0),
+    "WHITE": (255, 255, 255),
+    "GREEN": (0, 255, 0),
+    "BLUE": (0, 0, 255)
+}
+# Define constants for the screen width and height
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
+SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
 
-def a_star_search(problem, inital_state, goal, ):
-    if inital_state == goal:
-        return None
+# --- Global constants ENDS HERE ---
 
-    return None
+
+def main():
+    DrawWindow(pygame_screen_size=SCREEN_SIZE, bg_colour=colour_dict.get("WHITE"), grid_colour=colour_dict.get("RED"),
+               node_grid_size=600)
 
 
 if __name__ == '__main__':
-    print(f'Hello World')
+    main()
