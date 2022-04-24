@@ -7,6 +7,8 @@ import numpy as np
 import pygame
 import sys
 import os
+import random
+from TileClass import Tile
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 
@@ -18,6 +20,18 @@ BLUE = (0, 0, 255)
 PURPLE = (128, 0, 128)
 GRAY = (192, 192, 192)
 
+# Tile Colours
+# Dirt Tile
+DIRT_TILE_COLOR = (64, 41, 5)
+# Water Tile
+WATER_TILE_COLOR = (0, 51, 102)
+# Stone Tile
+STONE_TILE_COLOR = (128, 128, 128)
+# Forest Tile
+FOREST_TILE_COLOR = (0, 128, 0)
+# Sand Tile
+SAND_TILE_COLOR = (193, 154, 107)
+
 
 class WindowApp:
     """
@@ -25,7 +39,8 @@ class WindowApp:
     """
 
     def __init__(self, width: int, height: int, title: str, grid: [[]], grid_width: int,
-                 grid_height: int, grid_margin: int, xPos: int, yPos: int):
+                 grid_height: int, grid_margin: int, xPos: int, yPos: int, DirtTileCost: int, WaterTileCost: int,
+                 StoneTileCost: int, ForestTileCost: int, SandTileCost: int):
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.grid_margin = grid_margin
@@ -36,19 +51,29 @@ class WindowApp:
         self.x = xPos
         self.y = yPos
 
+        self.total_cost = None
+
         self.PyGameWindow = pygame.display.set_mode(self.screen_size)
 
         self.clock = pygame.time.Clock()
 
         self.running = True
         self.run_a_star = False
+        self.Diagonal = False
 
         self.row = None
         self.column = None
         self.goal = None
         self.start = None
-        self.cost = None
+        self.cost = 0
         self.debug = None
+        self.draw_maze = True
+
+        self.DirtTileCost = DirtTileCost
+        self.WaterTileCost = WaterTileCost
+        self.StoneTileCost = StoneTileCost
+        self.ForestTileCost = ForestTileCost
+        self.SandTileCost = SandTileCost
 
         self.init_app()
 
@@ -60,7 +85,7 @@ class WindowApp:
         print("Application started")
 
     def check_values(self):
-        if self.start is None or self.goal is None or self.cost is None:
+        if self.start is None:
             raise ValueError("Start, goal, and cost must be set to run the A* algorithm")
 
     def draw_grid(self):
@@ -68,9 +93,55 @@ class WindowApp:
             for column in range(len(self.grid)):
                 self.draw_rect(row=row, column=column, color=BLACK, border_radius=3, width=2)
 
+    def draw_tiles(self):
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid)):
+                random_tile = random.randint(0, 4)
+                if random_tile == 0:
+                    Dirt_tile = Tile(tile_type=DIRT_TILE_COLOR, tile_cost=self.DirtTileCost, grid_width=self.grid_width,
+                                     grid_height=self.grid_height, grid_margin=self.grid_margin)
+                    Dirt_tile.draw_tile(row=i, column=j, border_radius=3, width=0, screen=self.PyGameWindow, x=0, y=0)
+                    Dirt_tile.set_tile_grid_value(grid=self.grid, row=i, column=j)
+                elif random_tile == 1:
+                    Water_tile = Tile(tile_type=WATER_TILE_COLOR, tile_cost=self.WaterTileCost,
+                                      grid_width=self.grid_width,
+                                      grid_height=self.grid_height, grid_margin=self.grid_margin)
+                    Water_tile.draw_tile(row=i, column=j, border_radius=3, width=0, screen=self.PyGameWindow, x=0, y=0)
+
+                    Water_tile.set_tile_grid_value(grid=self.grid, row=i, column=j)
+                elif random_tile == 2:
+                    Sand_tile = Tile(tile_type=SAND_TILE_COLOR, tile_cost=self.SandTileCost, grid_width=self.grid_width,
+                                     grid_height=self.grid_height, grid_margin=self.grid_margin)
+                    Sand_tile.draw_tile(row=i, column=j, border_radius=3, width=0, screen=self.PyGameWindow, x=0, y=0)
+
+                    Sand_tile.set_tile_grid_value(grid=self.grid, row=i, column=j)
+
+                elif random_tile == 3:
+                    Stone_tile = Tile(tile_type=STONE_TILE_COLOR, tile_cost=self.StoneTileCost,
+                                      grid_width=self.grid_width,
+                                      grid_height=self.grid_height, grid_margin=self.grid_margin)
+                    Stone_tile.draw_tile(row=i, column=j, border_radius=3, width=0, screen=self.PyGameWindow, x=0,
+                                         y=0)
+
+                    Stone_tile.set_tile_grid_value(grid=self.grid, row=i, column=j)
+                elif random_tile == 4:
+                    Forest_tile = Tile(tile_type=FOREST_TILE_COLOR, tile_cost=self.ForestTileCost,
+                                       grid_width=self.grid_width,
+                                       grid_height=self.grid_height, grid_margin=self.grid_margin)
+                    Forest_tile.draw_tile(row=i, column=j, border_radius=3, width=0, screen=self.PyGameWindow, x=0, y=0)
+
+                    Forest_tile.set_tile_grid_value(grid=self.grid, row=i, column=j)
+
+    def fix_mistakes(self):  # This function is used to fix mistakes in the grid
+        self.draw_rect(row=0, column=0, color=GREEN, border_radius=3, width=0)
+        self.draw_rect(row=0, column=0, color=BLACK, border_radius=3, width=2)
+
     def on_execute(self):  # Main Loop that runs the game
         self.check_values()  # Check if the values are set
+        self.draw_tiles()
         self.draw_grid()
+        self.fix_mistakes()
+
         while self.running:
             self.process_input()
             self.update()
@@ -96,7 +167,7 @@ class WindowApp:
                     self.mouse_cords()
                     self.draw_rect_from_click()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and self.goal is not None and self.start is not None and self.cost is not None:
+                if event.key == pygame.K_RETURN and self.goal is not None and self.start is not None:
                     self.run_a_star = True
 
     def on_cleanup(self):
@@ -110,21 +181,27 @@ class WindowApp:
         start_position.g = start_position.h = start_position.f = 0
         goal_position = Node(None, tuple(self.goal))
         goal_position.g = goal_position.h = goal_position.f = 0
-
+        self.grid[0][0] = 0
         open_set = []  # Set of nodes to be evaluated, also called frontier
         closed_set = []  # Set of nodes already evaluated, also called reached
 
         open_set.append(start_position)
 
         # Movemment system - That can go in every direction
-        move = [[-1, 0],  # go up
-                [0, -1],  # go left
-                [1, 0],  # go down
-                [0, 1],  # go right
-                [-1, -1],  # go up left
-                [-1, 1],  # go up right
-                [1, -1],  # go down left
-                [1, 1]]  # go down right
+        if not self.Diagonal:
+            move = [[-1, 0],  # go up
+                    [0, -1],  # go left
+                    [1, 0],  # go down
+                    [0, 1]]  # go right
+        else:  # Diagonal  movement system - That can go in 4 directions
+            move = [[-1, 0],  # go up
+                    [0, -1],  # go left
+                    [1, 0],  # go down
+                    [0, 1],  # go right
+                    [-1, -1],  # go up left
+                    [-1, 1],  # go up right
+                    [1, -1],  # go down left
+                    [1, 1]]  # go down right
 
         outer_iterations = 0
         max_iterations = (len(self.grid) // 2) ** 10
@@ -172,9 +249,9 @@ class WindowApp:
                         node_position[1] < 0):
                     continue
 
-                # Make sure walkable terrain
-                if self.grid[node_position[0]][node_position[1]] != 0:
-                    continue
+                # # Make sure walkable terrain
+                # if self.grid[node_position[0]][node_position[1]] != 0:
+                #     continue
 
                 # Create new node
                 new_node = Node(current, node_position)
@@ -185,11 +262,16 @@ class WindowApp:
                 # Loop through children
             for child in children:
                 # print(f'child: {child.position}')
-                arraychild = np.asarray(child.position)
-                # print(f'arraychild: {arraychild[0]}, {arraychild[1]}')
-
-                self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLUE, border_radius=3, width=0)
-                self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
+                arraychild = np.asarray(child.position)  # convert to array because im lazy
+                # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLUE, border_radius=3, width=0)
+                # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
+                # self.draw_rect_alpha(surface=self.PyGameWindow, colour=(125, 125, 125, 127),
+                #                      rect=[(self.grid_margin + self.grid_width) *
+                #                            arraychild[1] + self.x + self.grid_margin,
+                #                            (self.grid_margin + self.grid_height) * arraychild[
+                #                                0] + self.y + self.grid_margin,
+                #                            self.grid_width,
+                #                            self.grid_height])
 
                 if arraychild[0] == self.start[0] and arraychild[1] == self.start[
                     1]:  # Ensure the start position is not  overwritten with blue
@@ -206,18 +288,25 @@ class WindowApp:
                     continue
 
                 # Create the f, g, and h values
-                child.g = current.g + self.cost
-                # Heuristic calculated Manhattan distance / Taxicab distance
-                #  works better for grid than euclidean
+
+                current.cost = self.grid[current.position[0]][current.position[1]]
+
+                # print(f'current.cost: {current.cost}')
+
+                #  gScore[neighbor] := tentative_gScore
+                child.g = current.g + current.cost
+                # Heuristic calculated Manhattan distance / Taxicab distance works better for grid than euclidean
+
+                # tentative_gScore := gScore[current] + d(current, neighbor)
                 child.h = self.Manhattan_distance(child.position, goal_position.position)
 
+                # fScore[neighbor] := tentative_gScore + h(neighbor)
                 child.f = child.g + child.h
 
-                # Child is already in the yet_to_visit list and g cost is already lower
                 if len([i for i in open_set if child == i and child.g > i.g]) > 0:
                     continue
 
-                # Add the child to the yet_to_visit list
+                # Add the child to the open_set list
                 open_set.append(child)
 
     @staticmethod
@@ -225,27 +314,41 @@ class WindowApp:
         return abs(start[0] - goal[0]) + abs(start[1] - goal[1])
 
     def return_path(self, current_node: Node):
-        path = []
-        no_rows, no_columns = np.shape(self.grid)
-        # here we create the initialized result maze with -1 in every position
-        result = [[-1 for i in range(no_columns)] for j in range(no_rows)]
-        current = current_node
-        while current is not None:
-            path.append(current.position)
-            current = current.parent
-        # Return reversed path as we need to show from start to end path
-        path_to_draw = path[::-1]
-        print(f'path_to_draw.pop(0) and path_to_draw.pop(-1): {path_to_draw.pop(0)}, {path_to_draw.pop(-1)}')
+        path = []  # List of nodes that make up the path
+
+        current = current_node  # Current node is the goal node
+        while current is not None:  #
+            path.append(current.position)  # Add the current node to the path
+            current = current.parent  # Set the current node to the parent of the current node
+
+        path_to_draw = path[::-1]  # reverse the path to draw from start to end
+
+        # Get total path cost
+        get_path_cost = np.asarray(path_to_draw)  # Convert path to numpy array
+
+        for i in range(len(get_path_cost)):
+            self.cost = self.cost + self.grid[get_path_cost[i][0]][
+                get_path_cost[i][1]]  # Add the cost of each node to the total cost
+            # print(f' cost: {self.grid[get_path_cost[i][0]][get_path_cost[i][1]]}')
+
         print(f'path_to_draw: {path_to_draw}')
+
+        path_to_draw.pop(0)  # remove the start position from the path to draw, so it is not overwritten
+        path_to_draw.pop(-1)  # remove the end position from the path to draw, so it is not overwritten
         for i in range(len(path_to_draw)):
             for j in range(len(path_to_draw[i])):
                 self.draw_rect(row=path_to_draw[i][0], column=path_to_draw[i][1], color=PURPLE, border_radius=3,
-                               width=0)
+                               width=0)  # Draw the path rectangle
                 self.draw_rect(row=path_to_draw[i][0], column=path_to_draw[i][1], color=BLACK, border_radius=3,
-                               width=2)
-        return result
+                               width=2)  # Draw the path "outline"
 
-    def draw_rect(self, row: int, column: int, color: (int, int, int), border_radius, width) -> [[]]:
+        print(f'Total Cost: {self.cost}')  # Print the total cost of the path
+        print('\n'.join([''.join(["{:" ">5d}".format(item) for item in row])
+                         for row in self.grid]))  # Print the grid with values shown
+
+        return path_to_draw
+
+    def draw_rect(self, row: int, column: int, color: (int, int, int), border_radius, width):
         pygame.draw.rect(self.PyGameWindow,
                          color,
                          [(self.grid_margin + self.grid_width) * column + self.x + self.grid_margin,
@@ -254,7 +357,7 @@ class WindowApp:
                           self.grid_height],
                          width,
                          border_radius=border_radius)
-        return None
+        return
 
     def mouse_cords(self):
         pos = pygame.mouse.get_pos()
@@ -262,29 +365,27 @@ class WindowApp:
         self.column = pos[0] // (self.grid_width + self.grid_margin)
         self.row = pos[1] // (self.grid_height + self.grid_margin)
         if self.row < len(self.grid) and self.column < len(self.grid[0]):
-            print("Click ", pos, "Grid coordinates: ", self.row, self.column)
+            print("Click ", pos, "Grid coordinates: ", (self.row, self.column))
             # self.grid[self.row][self.column] = 1
         # print(row < len(self.grid), "Row Value :", row) # Used at debugger value : To know when user clicks outside
         return None
 
     def draw_rect_from_click(self):
         if self.row < len(self.grid) and self.column < len(self.grid[0]):  # Check if user clicks outside the grid
-            # if self.grid[self.row][self.column] == 0:
-            self.draw_rect(row=self.row, column=self.column, color=GRAY, border_radius=3, width=0)
+            self.goal = (self.row, self.column)
+            if self.debug:
+                print(f'value of start: {self.goal}')
+                print("Index Value : ", self.grid[self.row][self.column])
+                print("Grid Value : ", self.grid[self.row][self.column])
+            self.grid[self.row][self.column] = 0
+            self.draw_rect(row=self.row, column=self.column, color=RED, border_radius=3, width=0)
             self.draw_rect(row=self.row, column=self.column, color=BLACK, border_radius=3, width=2)
-            print("Index Value : ", self.grid[self.row][self.column])
-            self.grid[self.row][self.column] = 1
-            print("Grid Value : ", self.grid[self.row][self.column])
+
         return None
 
     def set_start_position(self, row: int, column: int) -> (int, int):
         self.draw_rect(row=row, column=column, color=GREEN, border_radius=3, width=0)
+        self.draw_rect(row=row, column=column, color=BLACK, border_radius=3, width=2)
         position = (row, column)
         print(f'set_start_position : coordinates: [{row},{column}]')
-        return position
-
-    def set_goal_position(self, row: int, column: int) -> (int, int):
-        self.draw_rect(row=row, column=column, color=RED, border_radius=3, width=0)
-        position = (row, column)
-        print(f'set_goal_position : coordinates: [{row},{column}]')
         return position

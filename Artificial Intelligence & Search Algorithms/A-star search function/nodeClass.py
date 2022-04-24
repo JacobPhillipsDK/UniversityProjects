@@ -10,8 +10,13 @@ class Node:
         self.parent = parent
         self.position = position
 
-        self.g = 0
-        self.h = 0
-        self.f = 0
+        self.g = 0 # cost from start to current Node
+        self.h = 0 # heuristic based estimated cost for current Node to end Node
+        self.f = 0 # total cost of present node i.e. :  f = g + h
+        self.cost = 0
+
     def __eq__(self, other):
         return self.position == other.position
+
+    def set_cost(self, cost):
+        self.cost = cost
