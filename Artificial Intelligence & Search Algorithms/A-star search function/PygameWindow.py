@@ -1,7 +1,3 @@
-# Note to Jacob
-# Grid value 1 will always mean start position
-# Grid value 9 will always mean end position
-#
 from nodeClass import Node
 import numpy as np
 import pygame
@@ -74,6 +70,7 @@ class WindowApp:
         self.StoneTileCost = StoneTileCost
         self.ForestTileCost = ForestTileCost
         self.SandTileCost = SandTileCost
+        self.all_sprites = pygame.sprite.Group()
 
         self.init_app()
 
@@ -136,12 +133,14 @@ class WindowApp:
         self.draw_rect(row=0, column=0, color=GREEN, border_radius=3, width=0)
         self.draw_rect(row=0, column=0, color=BLACK, border_radius=3, width=2)
 
-    def on_execute(self):  # Main Loop that runs the game
+    def render_once(self):
         self.check_values()  # Check if the values are set
         self.draw_tiles()
         self.draw_grid()
         self.fix_mistakes()
 
+    def on_execute(self):  # Main Loop that runs the game
+        self.render_once()
         while self.running:
             self.process_input()
             self.update()
@@ -150,6 +149,7 @@ class WindowApp:
         self.on_cleanup()
 
     def on_render(self):  # Render the game state
+        # self.Alpha.move_creature(direction_x=1, direction_y=1)
         pygame.display.update()  # display.flip is also available
 
     def update(self):  # Update game state
@@ -193,7 +193,7 @@ class WindowApp:
                     [0, -1],  # go left
                     [1, 0],  # go down
                     [0, 1]]  # go right
-        else:  # Diagonal  movement system - That can go in 4 directions
+        else:  # Diagonal  movement system - That can go in 8 directions
             move = [[-1, 0],  # go up
                     [0, -1],  # go left
                     [1, 0],  # go down
@@ -265,13 +265,6 @@ class WindowApp:
                 arraychild = np.asarray(child.position)  # convert to array because im lazy
                 # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLUE, border_radius=3, width=0)
                 # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
-                # self.draw_rect_alpha(surface=self.PyGameWindow, colour=(125, 125, 125, 127),
-                #                      rect=[(self.grid_margin + self.grid_width) *
-                #                            arraychild[1] + self.x + self.grid_margin,
-                #                            (self.grid_margin + self.grid_height) * arraychild[
-                #                                0] + self.y + self.grid_margin,
-                #                            self.grid_width,
-                #                            self.grid_height])
 
                 if arraychild[0] == self.start[0] and arraychild[1] == self.start[
                     1]:  # Ensure the start position is not  overwritten with blue
@@ -339,6 +332,16 @@ class WindowApp:
             for j in range(len(path_to_draw[i])):
                 self.draw_rect(row=path_to_draw[i][0], column=path_to_draw[i][1], color=PURPLE, border_radius=3,
                                width=0)  # Draw the path rectangle
+                # pygame.draw.rect(self.PyGameWindow,
+                #                  PURPLE,
+                #                  [(self.grid_margin + + self.grid_width) * path_to_draw[i][
+                #                      1] + self.x + 5 + self.grid_margin,
+                #                   (self.grid_margin + self.grid_height) * path_to_draw[i][
+                #                       0] + self.y + 3 + self.grid_margin,
+                #                   self.grid_width - 10,
+                #                   self.grid_height - 10],
+                #                  0,
+                #                  border_radius=3)
                 self.draw_rect(row=path_to_draw[i][0], column=path_to_draw[i][1], color=BLACK, border_radius=3,
                                width=2)  # Draw the path "outline"
 
@@ -377,10 +380,9 @@ class WindowApp:
                 print(f'value of start: {self.goal}')
                 print("Index Value : ", self.grid[self.row][self.column])
                 print("Grid Value : ", self.grid[self.row][self.column])
-            self.grid[self.row][self.column] = 0
+            # self.grid[self.row][self.column] = 0
             self.draw_rect(row=self.row, column=self.column, color=RED, border_radius=3, width=0)
             self.draw_rect(row=self.row, column=self.column, color=BLACK, border_radius=3, width=2)
-
         return None
 
     def set_start_position(self, row: int, column: int) -> (int, int):

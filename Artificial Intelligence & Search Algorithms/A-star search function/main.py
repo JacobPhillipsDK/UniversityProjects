@@ -21,12 +21,8 @@ y = 0  # y-coordinate of the top left corner of the grid
 
 
 def create_2d_array(size: int) -> [[]]:
-    """
-    Will return an array with size*size
-    """
+    """Will return an array with size*size"""
     grid = [[0 for i in range(size)] for j in range(size)]
-    # print("size :", size * size)
-    # print(f'grid {len(grid)}')
     return grid
 
 
@@ -39,17 +35,18 @@ def create_PyGameWindow():
     StoneTileCost = 7
     ForrestTileCost = 15
 
-    pygame_window = WindowApp(width=800, height=800, title="Pygame Window",
-                              grid=grid, grid_width=WIDTH, grid_height=HEIGHT,
-                              grid_margin=MARGIN, xPos=x, yPos=y, DirtTileCost=DirtTileCost,
-                              WaterTileCost=WaterTileCost, ForestTileCost=ForrestTileCost, SandTileCost=SandTileCost,
-                              StoneTileCost=StoneTileCost)  # Create a new window
+    PathAGame = WindowApp(width=800, height=800, title="Pygame Window",
+                          grid=grid, grid_width=WIDTH, grid_height=HEIGHT,
+                          grid_margin=MARGIN, xPos=x, yPos=y, DirtTileCost=DirtTileCost,
+                          WaterTileCost=WaterTileCost, ForestTileCost=ForrestTileCost, SandTileCost=SandTileCost,
+                          StoneTileCost=StoneTileCost)  # Create a new window
 
-    pygame_window.start = pygame_window.set_start_position(0, 0)  # set the start position of the grid
-    pygame_window.debug = False
+    PathAGame.start = PathAGame.set_start_position(0, 0)  # set the start position of the grid
+    PathAGame.debug = False
 
-    pygame_window.Diagonal = False
-    pygame_window.on_execute()
+    PathAGame.Diagonal = False
+
+    PathAGame.on_execute()  # Execute the window and starts the game
 
 
 if "__main__" == __name__:
