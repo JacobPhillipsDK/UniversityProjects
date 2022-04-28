@@ -51,7 +51,8 @@ class Creature:
         # UPDATE dv AND dr WITH MLP RESPONSE
         self.nn_dv = float(out[0])  # [-1, 1]  (accelerate=1, deaccelerate=-1)
         self.nn_dr = float(out[1])  # [-1, 1]  (left=1, right=-1)
-        print(f'Print the MLP response of both dv and dr, dr :  {self.nn_dr} dv :{self.nn_dr} ')
+        if self.debug_mode:
+            print(f'Print the MLP response of both dv and dr, dr :  {self.nn_dr} dv :{self.nn_dr} ')
 
         # UPDATE HEADING
 
