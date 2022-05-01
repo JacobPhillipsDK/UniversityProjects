@@ -44,7 +44,7 @@ def create_PyGameWindow():
     PathAGame.start = PathAGame.set_start_position(0, 0)  # set the start position of the grid
     PathAGame.debug = False
 
-    PathAGame.Diagonal = False
+    PathAGame.Diagonal = True
 
     PathAGame.on_execute()  # Execute the window and starts the game
 

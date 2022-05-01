@@ -1,7 +1,5 @@
-import random
-import numpy as np
-import math
 
+from numpy.random import uniform
 import pygame
 
 
@@ -9,14 +7,14 @@ class Food:
     def __init__(self, surface: pygame.surface, colour: (int, int, int)):
         self.colour = colour
         self.surface = surface
-        self.xPos = random.uniform(0, 800)
-        self.yPos = random.uniform(0, 800)
+        self.xPos = uniform(100, 700)
+        self.yPos = uniform(100, 700)
         # print(f' xPos : {self.xPos} yPos : {self.yPos}')
         self.energy = 1
 
     def respawn(self):
-        self.xPos = random.uniform(0, 800)
-        self.yPos = random.uniform(0, 800)
+        self.xPos = uniform(100, 700)
+        self.yPos = uniform(100, 700)
         self.energy = 1
 
     def draw_food(self):
