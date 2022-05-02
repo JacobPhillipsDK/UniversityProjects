@@ -1,9 +1,5 @@
 from PygameWindow import *
-import numpy as np
-import collections
-import operator
-from Creature import Creature
-import random
+
 
 # Define some colors
 BLACK = (0, 0, 0)

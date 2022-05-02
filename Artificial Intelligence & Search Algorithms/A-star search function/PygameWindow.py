@@ -181,7 +181,6 @@ class WindowApp:
         start_position.g = start_position.h = start_position.f = 0
         goal_position = Node(None, tuple(self.goal))
         goal_position.g = goal_position.h = goal_position.f = 0
-        self.grid[0][0] = 0
         open_set = []  # Set of nodes to be evaluated, also called frontier
         closed_set = []  # Set of nodes already evaluated, also called reached
 
@@ -203,10 +202,9 @@ class WindowApp:
                     [1, -1],  # go down left
                     [1, 1]]  # go down right
 
-        outer_iterations = 0
-        max_iterations = (len(self.grid) // 2) ** 10
 
-        # find maze has got how many rows and columns
+
+        # find grid has got how many rows and columns
         row, column = np.shape(self.grid)
 
         print("Starting A* Algorithm")
@@ -220,9 +218,6 @@ class WindowApp:
                     # if we hit this point return the path such as it may be no solution or
                     # computation cost is too high
 
-            if outer_iterations > max_iterations:
-                print("giving up on pathfinding too many iterations")
-                return self.return_path(current)
 
                 # Pop current node out off yet_to_visit list, add to visited list
             open_set.pop(current_index)
@@ -236,44 +231,21 @@ class WindowApp:
             # Generate children from all adjacent squares
             children = []
             for new_position in move:
-
                 # Get node position
                 node_position = (current.position[0] + new_position[0], current.position[1] + new_position[1])
-
-                # node_position[0
-                # Make sure within range (check if within maze boundary)
-
-                if (node_position[0] > (row - 1) or
-                        node_position[0] < 0 or
-                        node_position[1] > (column - 1) or
-                        node_position[1] < 0):
-                    continue
-
-                # # Make sure walkable terrain
-                # if self.grid[node_position[0]][node_position[1]] != 0:
-                #     continue
-
                 # Create new node
                 new_node = Node(current, node_position)
-
                 # Append
                 children.append(new_node)
 
                 # Loop through children
             for child in children:
-                # print(f'child: {child.position}')
+
                 arraychild = np.asarray(child.position)  # convert to array because im lazy
-                # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLUE, border_radius=3, width=0)
-                # self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
 
                 if arraychild[0] == self.start[0] and arraychild[1] == self.start[
                     1]:  # Ensure the start position is not  overwritten with blue
                     self.draw_rect(row=arraychild[0], column=arraychild[1], color=GREEN, border_radius=3, width=0)
-                    self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
-
-                if arraychild[0] == self.goal[0] and arraychild[1] == self.goal[
-                    1]:  # Ensure the start position is not  overwritten with blue
-                    self.draw_rect(row=arraychild[0], column=arraychild[1], color=RED, border_radius=3, width=0)
                     self.draw_rect(row=arraychild[0], column=arraychild[1], color=BLACK, border_radius=3, width=2)
 
                 # Child is on the visited list (search entire visited list)
@@ -281,11 +253,7 @@ class WindowApp:
                     continue
 
                 # Create the f, g, and h values
-
                 current.cost = self.grid[current.position[0]][current.position[1]]
-
-                # print(f'current.cost: {current.cost}')
-
                 #  gScore[neighbor] := tentative_gScore
                 child.g = current.g + current.cost
                 # Heuristic calculated Manhattan distance / Taxicab distance works better for grid than euclidean
@@ -295,10 +263,8 @@ class WindowApp:
 
                 # fScore[neighbor] := tentative_gScore + h(neighbor)
                 child.f = child.g + child.h
-
                 if len([i for i in open_set if child == i and child.g > i.g]) > 0:
                     continue
-
                 # Add the child to the open_set list
                 open_set.append(child)
 

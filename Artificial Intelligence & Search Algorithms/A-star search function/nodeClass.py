@@ -15,7 +15,7 @@ class Node:
         self.f = 0 # total cost of present node i.e. :  f = g + h
         self.cost = 0
 
-    def __eq__(self, other):
+    def __eq__(self, other): # Overriding the default __eq__ method
         return self.position == other.position
 
     def set_cost(self, cost):

@@ -1,4 +1,3 @@
-
 from numpy.random import uniform
 import pygame
 

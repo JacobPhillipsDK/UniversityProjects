@@ -1,5 +1,6 @@
 from PygameWindow import *
 from nodeClass import Node
+import numpy as np
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -22,7 +23,7 @@ y = 0  # y-coordinate of the top left corner of the grid
 
 def create_2d_array(size: int) -> [[]]:
     """Will return an array with size*size"""
-    grid = [[0 for i in range(size)] for j in range(size)]
+    grid = np.array([[0 for i in range(size)] for j in range(size)])
     return grid
 
 

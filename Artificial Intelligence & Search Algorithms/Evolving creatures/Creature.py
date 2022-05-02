@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import math
 
 import pygame
 
@@ -14,10 +13,10 @@ class Creature:
         self.xPos = random.uniform(screen_size[0], screen_size[1])  # Takes a random number from 0-screen-size
         self.yPos = random.uniform(screen_size[0], screen_size[1])  # Takes a random number from 0-screen-size
 
-        self.dt = 0.04  # Simulate time step
-        self.dr_max = 720  # Max Rotational Speed ( degrees per second )
-        self.v_max = 10.0  # Max Velocity ( units per second)
-        self.dv_max = 15.0  # Max acceleration (+/-) (Units per second^2)
+        self.limit_speed = 0.04
+        self.dr_max = 720  # Max Rotational Speed
+        self.v_max = 10  # Max Velocity
+        self.dv_max = 15.0  # Max acceleration (+/-)
 
         self.r = random.uniform(0, 360)  # orientation   [0, 360] degrees
         self.v = random.uniform(0, self.v_max)  # velocity      [0, v_max]
@@ -46,11 +45,12 @@ class Creature:
         # NEURAL NETWORK
 
     def think(self):
+        if self.health > 100:
+            self.health = 100
         self.age += 0.005
 
         # SIMPLE MLP : Multilayer perceptron
-        def af(input):
-            # activation function
+        def af(input): # activation function
             return np.tanh(input)
 
         h1 = af(np.dot(self.wih, self.r_food))  # hidden layer
@@ -59,21 +59,19 @@ class Creature:
         # UPDATE dv AND dr WITH MLP RESPONSE
         self.nn_dv = float(out[0])  # [-1, 1]  (accelerate=1, deaccelerate=-1)
         self.nn_dr = float(out[1])  # [-1, 1]  (left=1, right=-1)
-        if self.debug_mode:
-            print(f'Print the MLP response of both dv and dr, dr :  {self.nn_dr} dv :{self.nn_dr} ')
+        # nn_dv means the acceleration
+        # nn_dr means the rotation
 
-        # UPDATE HEADING
-
-    def update_r(self):
-        self.r += self.nn_dr * self.dr_max * self.dt
+     # UPDATE HEADING
+    def update_r(self): # [0, 360] degrees Rotations
+        self.r += self.nn_dr * self.dr_max * self.limit_speed
         self.r = self.r % 360
         if self.debug_mode:
             print(f'self.r {self.r}')
 
-        # UPDATE VELOCITY
-
+    # UPDATE VELOCITY
     def update_vel(self):
-        self.v += self.nn_dv * self.dv_max * self.dt
+        self.v += self.nn_dv * self.dv_max * self.limit_speed
         if self.v < 0:
             self.v = 0
         if self.v > self.v_max:
@@ -81,11 +79,10 @@ class Creature:
         if self.debug_mode:
             print(f'Update vel : {self.v}')
 
-        # UPDATE POSITION
-
+     # UPDATE POSITION
     def update_pos(self):
-        dx = self.v * np.cos(np.radians(self.r)) * self.dt
-        dy = self.v * np.sin(np.radians(self.r)) * self.dt
+        dx = self.v * np.cos(np.radians(self.r)) * self.limit_speed # x-axis
+        dy = self.v * np.sin(np.radians(self.r)) * self.limit_speed # y-axis
         self.xPos += dx
         self.yPos += dy
         if self.debug_mode:
@@ -94,15 +91,21 @@ class Creature:
     def draw_creature(self):
         pygame.draw.circle(surface=self.surface, color=self.colour, center=(self.xPos, self.yPos),
                            radius=self.radius, width=0).move(self.xPos, self.yPos)
+
+
+        # Show food distance radius based on circle
+        pygame.draw.circle(surface=self.surface, color=(255,0,0), center=(self.xPos, self.yPos),
+                           radius=self.d_food, width=2).move(self.xPos, self.yPos)
+
         # # Draws the eye and nose of the creature
         # # The Nose
         pygame.draw.line(surface=self.surface, color=self.colour, start_pos=(self.xPos, self.yPos),
-                         end_pos=(self.xPos, self.yPos - 20), width=3).move(self.xPos, self.yPos)
+                         end_pos=(self.xPos, self.yPos - 15), width=3).move(self.xPos, self.yPos)
         pygame.draw.line(surface=self.surface, color=self.colour, start_pos=(self.xPos, self.yPos),
-                         end_pos=(self.xPos, self.yPos + 20), width=3).move(self.xPos, self.yPos)
+                         end_pos=(self.xPos, self.yPos + 15), width=3).move(self.xPos, self.yPos)
         #
         # # Eye Small evil eye
         pygame.draw.circle(surface=self.surface, color=(255, 255, 255), center=(self.xPos, self.yPos),
-                           radius=5, width=0).move(self.xPos, self.yPos)
+                           radius=7, width=0).move(self.xPos, self.yPos)
         pygame.draw.circle(surface=self.surface, color=(0, 0, 255), center=(self.xPos, self.yPos),
                            radius=3, width=0).move(self.xPos, self.yPos)

@@ -5,7 +5,6 @@ import os
 from Creature import Creature
 from Food import Food
 import numpy as np
-from tqdm import tqdm
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'  # Center the window
 
@@ -27,8 +26,8 @@ class WindowApp:
         self.list_of_food = []  # The array placeholder for food
         self.list_of_Bobs = []  # The creatures are called bob
 
-        self.Number_of_creatures = 50  # NUmber of bobs
-        self.Number_of_food = 125  # Number of food
+        self.Number_of_creatures = 15  # NUmber of bobs
+        self.Number_of_food = 100  # Number of food
 
         self.input_nodes = 1  # number of input nodes
         self.hidden_nodes = 5  # number of hidden nodes
@@ -97,12 +96,12 @@ class WindowApp:
         death_counter = str(int(self.bob_count_death))
         death_text = self.font.render("DEATH : " + death_counter, True, (0, 0, 0))
 
-        self.PyGameWindow.blit(fps_text, (20, 25))
-        self.PyGameWindow.blit(fitness_text, (75, 25))
-        self.PyGameWindow.blit(time_text, (200, 25))
-        self.PyGameWindow.blit(mutation_text, (350, 25))
-        self.PyGameWindow.blit(oldest_age_text, (465, 25))
-        self.PyGameWindow.blit(length_of_list_text, (575, 25))
+        self.PyGameWindow.blit(fps_text, (400, 765))
+        self.PyGameWindow.blit(fitness_text, (20, 25))
+        self.PyGameWindow.blit(time_text, (150, 25))
+        self.PyGameWindow.blit(mutation_text, (300, 25))
+        self.PyGameWindow.blit(oldest_age_text, (425, 25))
+        self.PyGameWindow.blit(length_of_list_text, (550, 25))
         self.PyGameWindow.blit(death_text, (700, 25))
 
     def on_render(self):  # Render the game state
@@ -140,22 +139,24 @@ class WindowApp:
 
     #### Creature and everything else starts here  ###
 
-    def distance(self, x1, y1, x2, y2):
+    def distance(self, x1, y1, x2, y2):  # Calculates the distance between two points
         return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     def calc_heading(self, creature, food):
-        d_x = food.xPos - creature.xPos
-        d_y = food.yPos - creature.yPos
-        theta_d = np.degrees(np.arctan2(d_y, d_x)) - creature.r
-        if abs(theta_d) > 180:
-            theta_d += 360
-        return theta_d / 180
+        dx = food.xPos - creature.xPos  # Calculates the difference between the x position of the food and the x position of the creature
+        dy = food.yPos - creature.yPos  # Calculates the difference between the x position of the food and the x position of the creature
+        theta_d = np.degrees(np.arctan2(dy, dx)) - creature.r  # Angle of the food relative to the creature
+        if abs(theta_d) > 180:  # If theta_d is greater than 180, it means the creature is heading in the opposite direction
+            theta_d += 360  # If theta_d is greater than 180, add 360 to it
+        normalised_theta_d = theta_d / 180  # Normalise theta_d to be between -1 and 1
+        return theta_d / 180  # Normalize theta_d
 
     def simulate_entities(self):
+
         for bob in self.list_of_Bobs:
-            bob.draw_creature()
-        for foods in self.list_of_food:
-            foods.draw_food()
+            for foods in self.list_of_food:
+                bob.draw_creature()
+                foods.draw_food()
 
         # UPDATE FITNESS FUNCTION
         for foods in self.list_of_food:
@@ -163,11 +164,12 @@ class WindowApp:
                 food_creature_dist = self.distance(bob.xPos, bob.yPos, foods.xPos, foods.yPos)
 
                 # UPDATE FITNESS FUNCTION
-                if food_creature_dist <= 0.80:  # Radius of the creature
+                if food_creature_dist <= 10.0:  # Radius of the creature
                     bob.fitness += foods.energy
                     # print(f'Bob fitness: {bob.fitness}')
                     foods.respawn()
-                    bob.health += 5
+                    bob.health += 2
+                    bob.d_food = 100
                     # print(f'Bob health: {bob.health}')
 
                 # RESET DISTANCE AND HEADING TO NEAREST FOOD SOURCE
@@ -185,6 +187,7 @@ class WindowApp:
                 if food_creature_dist < bob.d_food:
                     bob.d_food = food_creature_dist
                     bob.r_food = self.calc_heading(bob, foods)
+                    #print(f'bob.r_food = {bob.r_food}')
 
         # # GET ORGANISM RESPONSE
         for bob in self.list_of_Bobs:
@@ -205,27 +208,37 @@ class WindowApp:
 
         orgs_sorted = sorted(self.list_of_Bobs, key=lambda x: x.fitness, reverse=True)
 
-        # SELECTION (TRUNCATION SELECTION)
+        # SELECTION
         canidates = range(0, len(orgs_sorted))
-        # canidates = range(0, settings['pop_size']-1)
         random_index = np.random.choice(a=canidates, size=2, replace=False)
-        # print(f'random_index = {random_index}')
 
-        creature_bob_1 = orgs_sorted[0]
-        creature_bob_2 = orgs_sorted[1]
+        # If the Gene should be picked randomly use random index instead in the value for the gene
+        creature_bob_1 = orgs_sorted[0]  # creature_bob_1 = orgs_sorted[random_index[0]]
+        creature_bob_2 = orgs_sorted[1]  # creature_bob_2 = orgs_sorted[random_index[1]]
+
+
 
         # CROSSOVER
         crossover_weight = np.random.random()
         wih_new = (crossover_weight * creature_bob_1.wih) + ((1 - crossover_weight) * creature_bob_2.wih)
         who_new = (crossover_weight * creature_bob_1.who) + ((1 - crossover_weight) * creature_bob_2.who)
+        # print(f'wih_new = {wih_new}')
+        # print(f'who_new = {who_new}')
 
         mutate = np.random.random()
-        if mutate <= self.mutate_rate and int(self.fitness) > 3:
+        if mutate <= self.mutate_rate:
             self.mutation_counter += 1
             print(f'Mutation occurred with Mutate rate: {mutate}')
+            print(f'Parents genes and fitness values ')
+            print(f' creature_bob_1.wih = {creature_bob_1.wih}')
+            print(f' creature_bob_1.who = {creature_bob_1.who}')
+            print(f' creature_bob_2.wih = {creature_bob_2.wih}')
+            print(f' creature_bob_2.who = {creature_bob_2.who}')
             print(f'{creature_bob_1.name} Fitness : {creature_bob_1.fitness}')
             print(f'{creature_bob_2.name} Fitness : {creature_bob_2.fitness}')
-
+            print(f'wih and who values before mutation')
+            print(f'wih_new calculated = {wih_new}')
+            print(f'who_new calculated = {who_new}')
 
             # MUTATE WEIGHTS
             matrix_pick = np.random.randint(0, 2)
@@ -234,17 +247,29 @@ class WindowApp:
                 index_row = np.random.randint(0, self.hidden_nodes)
                 index_col = np.random.randint(0, self.input_nodes)
                 wih_new[index_row][index_col] = wih_new[index_row][index_col] * np.random.uniform(0.9, 1.1)
+                print(f' choice = 0 is used for mutation')
+                print(f'new with_new = {wih_new}')
+
 
             # MUTATE: WHO WEIGHTS
             if matrix_pick == 1:
                 index_row = np.random.randint(0, self.output_nodes)
                 index_col = np.random.randint(0, self.hidden_nodes)
                 who_new[index_row][index_col] = who_new[index_row][index_col] * np.random.uniform(0.9, 1.1)
+                print(f' choice = 1 is used for mutation')
+                print(f'new who_new = {who_new}')
+
+
+            # wih  mlp weights (input -> hidden)
+            # who mlp weights (hidden -> output)
+
+
 
             self.list_of_Bobs.append(
                 Creature(surface=self.PyGameWindow, screen_size=[100, 700], health=100,
-                         name=f'Bob Mutated ID{self.mutation_counter}',
+                         name=f'Bob Mutated_ID{self.mutation_counter}',
                          wih=wih_new, who=who_new))
+            print(f'spawned new creature')
 
     def spawn_entities(self):
 
