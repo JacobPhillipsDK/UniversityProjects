@@ -1,0 +1,28 @@
+Worlde - Brainstorm
+
+
+Rules of worlde ---
+
+Guess the WORDLE in six tries.
+
+Each guess must be a valid five-letter word. Hit the enter button to submit.
+
+After each guess, the color of the tiles will change to show how close your guess was to the word.
+
+-----------
+
+Correct - Letter placement turns into green box
+Yellow  - Correct Letter wrong placements
+Gray    - Letter not being used.
+
+-----------
+User interface
+- Boxgrid where words can be typed into
+- Easy overview over what letters are used or not
+- See how many tries are back
+----------
+Web app functions
+Find Word from wordlist
+Check if the Letters are in the designated word
+Turn Green/Yellow/Gray based on letter
+
